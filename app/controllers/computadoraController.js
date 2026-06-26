@@ -1,9 +1,8 @@
 import inquirer from "inquirer";
 import chalk from "chalk";
-import Helper from "../helpers/helper.js";
 
-// TODO: importar el modelo Computadora cuando esté listo
-// import Computadora from "../models/computadora.js";
+import Computadora from "../models/computadora.js";
+import Helper from "../helpers/helper.js";
 
 export default class ComputadoraController {
   opcion = 0;
@@ -32,7 +31,7 @@ export default class ComputadoraController {
 
   constructor(opcion) {
     this.opcion = opcion;
-    // TODO: this.computadora = new Computadora();
+    this.computadora = new Computadora();
   }
 
   async validarMenu(opcion) {
@@ -101,23 +100,37 @@ export default class ComputadoraController {
       },
     ]);
 
-    console.log(payload);
-    // TODO: validar duplicados y guardar usando this.computadora.save(...)
-    console.log(
-      chalk.bgYellow.black(
-        "Pendiente: conectar con el modelo para guardar el registro",
-      ),
-    );
+    const existe = await this.validateComputadora(payload.numeroSerie);
+    if (existe) {
+      console.log(
+        chalk.bgRed.white(
+          "No se puede registrar, ya existe una computadora con ese número de serie",
+        ),
+      );
+      console.log();
+      await Helper.esperar();
+      return;
+    }
+
+    await this.computadora.save({
+      table: this.computadora.getTable(),
+      id: Date.now(),
+      marca: payload.marca,
+      modelo: payload.modelo,
+      numeroSerie: payload.numeroSerie,
+      estado: payload.estado,
+    });
+
+    console.log();
+    console.log(chalk.bgGreen.white("Computadora registrada exitosamente"));
     await Helper.esperar();
   }
 
   async read() {
     console.log(chalk.bgBlue.white("Mostrando computadoras..."));
     console.log();
-    // TODO: cargar datos reales usando this.computadora.load()
-    console.log(
-      chalk.bgYellow.black("Pendiente: conectar con el modelo para leer los registros"),
-    );
+    const computadoras = await this.computadora.load();
+    console.table(computadoras);
     console.log();
     await Helper.esperar();
   }
@@ -126,13 +139,81 @@ export default class ComputadoraController {
     console.clear();
     console.log(chalk.bgYellow.black("Actualizando computadora..."));
     console.log();
-    // TODO: cargar lista con this.computadora.load(), seleccionar registro,
-    // pedir nuevos datos y guardar con this.computadora.update(id, payload)
-    console.log(
-      chalk.bgYellow.black(
-        "Pendiente: conectar con el modelo para actualizar un registro",
-      ),
-    );
+
+    const computadoras = await this.computadora.load();
+
+    if (computadoras.length === 0) {
+      console.log(chalk.bgRed.white("No hay computadoras registradas"));
+      await Helper.esperar();
+      return;
+    }
+
+    const { seleccionada } = await inquirer.prompt([
+      {
+        type: "select",
+        name: "seleccionada",
+        message: "Seleccione la computadora a actualizar:",
+        choices: computadoras.map((c) => ({
+          name: `${c.marca} ${c.modelo} (${c.numeroSerie}) - ${c.estado}`,
+          value: c,
+        })),
+      },
+    ]);
+
+    let payload = await inquirer.prompt([
+      {
+        type: "input",
+        name: "marca",
+        message: "Nueva marca:",
+        default: seleccionada.marca,
+        validate: (input) => {
+          if (input.trim() === "") {
+            return "La marca no puede estar vacía.";
+          }
+          return true;
+        },
+      },
+      {
+        type: "input",
+        name: "modelo",
+        message: "Nuevo modelo:",
+        default: seleccionada.modelo,
+        validate: (input) => {
+          if (input.trim() === "") {
+            return "El modelo no puede estar vacío.";
+          }
+          return true;
+        },
+      },
+      {
+        type: "input",
+        name: "numeroSerie",
+        message: "Nuevo número de serie:",
+        default: seleccionada.numeroSerie,
+        validate: (input) => {
+          if (input.trim() === "") {
+            return "El número de serie no puede estar vacío.";
+          }
+          return true;
+        },
+      },
+      {
+        type: "select",
+        name: "estado",
+        message: "Nuevo estado:",
+        default: seleccionada.estado,
+        choices: [
+          { name: "Nueva", value: "Nueva" },
+          { name: "En mantenimiento", value: "En mantenimiento" },
+          { name: "Reparada", value: "Reparada" },
+        ],
+      },
+    ]);
+
+    await this.computadora.update(seleccionada.id, payload);
+
+    console.log();
+    console.log(chalk.bgGreen.white("Computadora actualizada exitosamente"));
     await Helper.esperar();
   }
 
@@ -140,14 +221,57 @@ export default class ComputadoraController {
     console.clear();
     console.log(chalk.bgRed.white("Eliminando computadora..."));
     console.log();
-    // TODO: cargar lista con this.computadora.load(), seleccionar registro,
-    // confirmar y eliminar con this.computadora.delete(id)
-    console.log(
-      chalk.bgYellow.black(
-        "Pendiente: conectar con el modelo para eliminar un registro",
-      ),
-    );
+
+    const computadoras = await this.computadora.load();
+
+    if (computadoras.length === 0) {
+      console.log(chalk.bgRed.white("No hay computadoras registradas"));
+      await Helper.esperar();
+      return;
+    }
+
+    const { seleccionada } = await inquirer.prompt([
+      {
+        type: "select",
+        name: "seleccionada",
+        message: "Seleccione la computadora a eliminar:",
+        choices: computadoras.map((c) => ({
+          name: `${c.marca} ${c.modelo} (${c.numeroSerie}) - ${c.estado}`,
+          value: c,
+        })),
+      },
+    ]);
+
+    const { confirmar } = await inquirer.prompt([
+      {
+        type: "confirm",
+        name: "confirmar",
+        message: `¿Confirma eliminar "${seleccionada.marca} ${seleccionada.modelo}" (${seleccionada.numeroSerie})?`,
+        default: false,
+      },
+    ]);
+
+    if (!confirmar) {
+      console.log(chalk.bgYellow.black("Eliminación cancelada"));
+      await Helper.esperar();
+      return;
+    }
+
+    await this.computadora.delete(seleccionada.id);
+
+    console.log();
+    console.log(chalk.bgGreen.white("Computadora eliminada exitosamente"));
     await Helper.esperar();
+  }
+
+  async validateComputadora(numeroSerie) {
+    const computadoras = await this.computadora.load();
+    const computadora = computadoras.find(
+      (c) =>
+        c.numeroSerie.toLowerCase().trim() ===
+        numeroSerie.toLowerCase().trim(),
+    );
+    return computadora;
   }
 
   async init() {
