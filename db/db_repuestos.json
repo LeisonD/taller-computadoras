@@ -1,0 +1,18 @@
+[
+  {
+    "table": "repuestos",
+    "id": 1780000000101,
+    "nombre": "Memoria RAM 8GB DDR4",
+    "categoria": "RAM",
+    "cantidad": 15,
+    "precio": 25.5
+  },
+  {
+    "table": "repuestos",
+    "id": 1780000000102,
+    "nombre": "SSD 240GB",
+    "categoria": "Almacenamiento",
+    "cantidad": 8,
+    "precio": 30
+  }
+]

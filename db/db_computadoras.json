@@ -1,0 +1,18 @@
+[
+  {
+    "table": "computadoras",
+    "id": 1780000000001,
+    "marca": "Dell",
+    "modelo": "OptiPlex 7090",
+    "numeroSerie": "DL-7090-001",
+    "estado": "Nueva"
+  },
+  {
+    "table": "computadoras",
+    "id": 1780000000002,
+    "marca": "HP",
+    "modelo": "ProDesk 600",
+    "numeroSerie": "HP-600-014",
+    "estado": "En mantenimiento"
+  }
+]
