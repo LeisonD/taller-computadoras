@@ -1,0 +1,18 @@
+{
+  "name": "taller-computadoras",
+  "version": "1.0.0",
+  "description": "Consola para gestionar un taller de computadoras: equipos y repuestos",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "chalk": "^5.6.2",
+    "inquirer": "^14.0.0"
+  }
+}
